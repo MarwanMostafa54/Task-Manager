@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #34495e;
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .task {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+
+        .task h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .task p {
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .task-actions button {
+            flex: 1;
+            padding: 8px;
+        }
+
+        .delete-btn {
+            background-color: #e74c3c;
+        }
+
+        .delete-btn:hover {
+            background-color: #c0392b;
+        }
+
+        .status-btn {
+            background-color: #2ecc71;
+        }
+
+        .status-btn:hover {
+            background-color: #27ae60;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-pending {
+            background-color: #f1c40f;
+            color: #fff;
+        }
+
+        .status-completed {
+            background-color: #2ecc71;
+            color: #fff;
+        }
+
+        #taskDescription {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+        }
+
+        .tab.active {
+            border-bottom: 2px solid #3498db;
+            color: #3498db;
+        }
+
+        #taskStats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .stat-box {
+            padding: 15px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            flex: 1;
+            margin: 0 10px;
+        }
+
+        #dashboard {
+            display: none;  /* Ensure dashboard is hidden by default */
+        }
+
+        #authForms {
+            display: block; /* Ensure auth forms are visible by default */
+        }
+    </style>
+</head>
+<body>
+    <div class="container auth-forms" id="authForms">
+        <h2>Login</h2>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="loginEmail">Email:</label>
+                <input type="email" id="loginEmail" required>
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Password:</label>
+                <input type="password" id="loginPassword" required>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+
+        <hr style="margin: 20px 0;">
+
+        <h2>Register</h2>
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="registerUsername">Username:</label>
+                <input type="text" id="registerUsername" required>
+            </div>
+            <div class="form-group">
+                <label for="registerEmail">Email:</label>
+                <input type="email" id="registerEmail" required>
+            </div>
+            <div class="form-group">
+                <label for="registerPassword">Password:</label>
+                <input type="password" id="registerPassword" required>
+            </div>
+            <button type="submit">Register</button>
+        </form>
+    </div>
+
+    <div class="container dashboard" id="dashboard">
+        <h2>Task Manager</h2>
+        <div id="taskStats">
+            <div class="stat-box">
+                <h4>Total Tasks</h4>
+                <span id="totalTasks">0</span>
+            </div>
+            <div class="stat-box">
+                <h4>Pending</h4>
+                <span id="pendingTasks">0</span>
+            </div>
+            <div class="stat-box">
+                <h4>Completed</h4>
+                <span id="completedTasks">0</span>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('all')">All Tasks</div>
+            <div class="tab" onclick="showTab('pending')">Pending</div>
+            <div class="tab" onclick="showTab('completed')">Completed</div>
+        </div>
+
+        <form id="taskForm">
+            <div class="form-group">
+                <label for="taskTitle">Task Title</label>
+                <input type="text" id="taskTitle" placeholder="Enter task title" required>
+            </div>
+            <div class="form-group">
+                <label for="taskDescription">Task Description</label>
+                <textarea id="taskDescription" placeholder="Enter task description" required></textarea>
+            </div>
+            <button type="submit">Add New Task</button>
+        </form>
+
+        <div id="taskList"></div>
+        <button onclick="logout()" style="margin-top: 20px; background-color: #e74c3c;">Logout</button>
+    </div>
+
+    <script>
+        // Clear any existing token on page load
+        window.onload = function() {
+            localStorage.removeItem('token'); // Add this line to force logout on refresh
+            document.getElementById('authForms').style.display = 'block';
+            document.getElementById('dashboard').style.display = 'none';
+        };
+
+        // Register Form Handler
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: document.getElementById('registerUsername').value,
+                        email: document.getElementById('registerEmail').value,
+                        password: document.getElementById('registerPassword').value
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    alert('Registration successful! Please login.');
+                    document.getElementById('registerForm').reset();
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+
+        // Login Form Handler
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: document.getElementById('loginEmail').value,
+                        password: document.getElementById('loginPassword').value
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('userData', JSON.stringify(data));
+                    showDashboard(data);
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+
+        // Task Form Handler
+        document.getElementById('taskForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const response = await fetch('http://localhost:5000/api/tasks', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({
+                        title: document.getElementById('taskTitle').value,
+                        description: document.getElementById('taskDescription').value
+                    })
+                });
+                if (response.ok) {
+                    document.getElementById('taskForm').reset();
+                    loadTasks();
+                } else {
+                    throw new Error('Failed to create task');
+                }
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+
+        let currentFilter = 'all';
+
+        function showTab(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            loadTasks();
+        }
+
+        async function loadTasks() {
+            try {
+                const response = await fetch('http://localhost:5000/api/tasks', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                const data = await response.json();
+                // Ensure tasks is an array
+                const tasks = Array.isArray(data) ? data : (data.tasks || []);
+                
+                // Update stats
+                const stats = {
+                    total: tasks.length,
+                    pending: tasks.filter(t => t.status === 'pending').length,
+                    completed: tasks.filter(t => t.status === 'completed').length
+                };
+                
+                document.getElementById('totalTasks').textContent = stats.total;
+                document.getElementById('pendingTasks').textContent = stats.pending;
+                document.getElementById('completedTasks').textContent = stats.completed;
+
+                // Filter tasks
+                const filteredTasks = currentFilter === 'all' 
+                    ? tasks 
+                    : tasks.filter(task => task.status === currentFilter);
+
+                const taskList = document.getElementById('taskList');
+                taskList.innerHTML = filteredTasks.map(task => `
+                    <div class="task">
+                        <h3>${task.title}</h3>
+                        <p>${task.description}</p>
+                        <span class="status-badge status-${task.status}">
+                            ${task.status.toUpperCase()}
+                        </span>
+                        <div class="task-actions">
+                            <button class="delete-btn" onclick="deleteTask('${task._id}')">Delete</button>
+                            <button class="status-btn" onclick="toggleStatus('${task._id}', '${task.status}')">
+                                ${task.status === 'pending' ? 'Mark Complete' : 'Mark Pending'}
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading tasks:', error);
+                document.getElementById('taskList').innerHTML = '<p>Error loading tasks</p>';
+            }
+        }
+
+        async function deleteTask(taskId) {
+            try {
+                const response = await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                if (response.ok) {
+                    loadTasks();
+                }
+            } catch (error) {
+                alert('Error deleting task');
+            }
+        }
+
+        async function toggleStatus(taskId, currentStatus) {
+            try {
+                const newStatus = currentStatus === 'pending' ? 'completed' : 'pending';
+                const response = await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                if (response.ok) {
+                    loadTasks();
+                }
+            } catch (error) {
+                alert('Error updating task');
+            }
+        }
+
+        function showDashboard(userData = null) {
+            document.getElementById('authForms').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            loadTasks();
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            document.getElementById('authForms').style.display = 'block';
+            document.getElementById('dashboard').style.display = 'none';
+        }
+    </script>
+</body>
+</html>  
